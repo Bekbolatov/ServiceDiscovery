@@ -56,7 +56,7 @@ class ServiceDiscovery {
     */
   def updateCachedService(serviceName: String, requestTime: Long): Service = synchronized {
     cachedServices.
-      find(cs => cs.serviceName == serviceName && cs.lastUpdatedMillis < requestTime).
+      find(cs => cs.serviceName == serviceName && cs.lastUpdatedMillis > requestTime).
       map(_.service) getOrElse {
       val instances = Try {
         getListOfFiles(s"$REGISTRY_LOC/$serviceName/").flatMap { file =>
@@ -72,6 +72,7 @@ class ServiceDiscovery {
       val service = Service(instances)
       val curTimeMillis = new DateTime().getMillis
       val cachedService = CachedService(serviceName, curTimeMillis, curTimeMillis + MAX_FRESH_TIME_MILLIS, service)
+      cachedServices = Seq(cachedService) ++ cachedServices.filter(c => c.serviceName != serviceName)
       service
     }
   }
