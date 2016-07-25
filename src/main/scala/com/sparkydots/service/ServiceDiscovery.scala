@@ -1,6 +1,6 @@
 package com.sparkydots.service
 
-import java.io.File
+import java.io.{File, StringWriter, PrintWriter}
 
 import scala.concurrent.{Future, ExecutionContext, Promise}
 import scala.util.Try
@@ -42,7 +42,9 @@ class ServiceDiscovery {
 
     serviceCall.onFailure { case thrown =>
       log.foreach(_(s"Failure during service call: $service"))
-      log.foreach(_(thrown.getStackTrace.toString))
+      val sw = new StringWriter
+      thrown.printStackTrace(new PrintWriter(sw))
+      log.foreach(_ (sw.toString))
       if (forceRefresh) {
         log.foreach(_("Not refreshing service."))
         promise.success(None)
